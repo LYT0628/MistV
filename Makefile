@@ -1,3 +1,6 @@
 kilo: kilo.c
-	gcc kilo.c -o kilo -Wall -Wextra -pedantic  -std=c99
+	cc -o $@ $^ -Wall -Wextra -pedantic  -std=c99
 
+.Proxy: clean
+clean:
+	rm -rf kilo
