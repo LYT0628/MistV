@@ -205,7 +205,6 @@ void editorRefreshScreen()
   struct abuf ab = ABUF_INIT;
 
   abAppend(&ab, ES_HIDE_CURSOR, ES_HIDE_CURSOR_SIZE);
-  abAppend(&ab, ES_CLEAR_ENTIRE_SCREEN, ES_CLEAR_ENTIRE_SCREEN_SIZE);
   abAppend(&ab,ES_POSITION_CURSOR_ORIGIN, ES_POSITION_CURSOR_ORIGIN_SIZE);
 
   editorDrawRows(&ab);
