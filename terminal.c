@@ -78,6 +78,14 @@ void editorDrawRows(struct abuf *ab){
       int welcomelen = snprintf(welcome, sizeof(welcome),
         "Love editor -- version %s", LOVE_VERSION);
       if (welcomelen > E.screencols) welcomelen = E.screencols;
+      // horizontal center
+      int padding = (E.screencols - welcomelen) / 2;
+      if (padding) {
+        abAppend(ab, "~", 1);
+        padding--;
+      }
+      while (padding--) abAppend(ab, " ", 1);
+
       abAppend(ab, welcome, welcomelen);
     } else {
       abAppend(ab, "~", 1);
@@ -135,6 +143,10 @@ void editorRefreshScreen()
   abAppend(&ab,ES_POSITION_CURSOR_ORIGIN, ES_POSITION_CURSOR_ORIGIN_SIZE);
 
   editorDrawRows(&ab);
+
+  char buf[32];
+  snprintf(buf, sizeof(buf), ES_POSITION_CURSOR_FORMAT, E.cy + 1, E.cx + 1);
+  abAppend(&ab, buf, strlen(buf));
   
   abAppend(&ab, ES_POSITION_CURSOR_ORIGIN, ES_POSITION_CURSOR_ORIGIN_SIZE);
   abAppend(&ab, ES_SHOW_CURSOR, ES_SHOW_CURSOR_SIZE);
@@ -143,3 +155,4 @@ void editorRefreshScreen()
   
   abFree(&ab);
 }
+

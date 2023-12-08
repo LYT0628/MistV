@@ -1,6 +1,9 @@
 #ifndef __ESCAPE_H__
 #define __ESCAPE_H__
 
+#define ES_PREFIX  "\x1b["
+#define ES_PREFIX_0 '\x1b'
+#define ES_PREFIX_1 '['
 // arg 
 // 2, clear the entire screen
 // 1, clear the screen up to where the cursor is
@@ -16,8 +19,9 @@
 // size of the macro  ES_CLEAR_ENTIRE_SCREEN
 #define ES_CLEAR_ENTIRE_SCREEN_SIZE  4
 
-#define ES_POSITION_CURSOR(row, col) "\x1b[row;colH"
+#define ES_POSITION_CURSOR(r, c) "\x1b[r;cH"
 #define ES_POSITION_CURSOR_SIZE 3
+#define ES_POSITION_CURSOR_FORMAT "\x1b[%d;%dH"
 
 #define ES_POSITION_CURSOR_ORIGIN "\x1b[H"
 #define ES_POSITION_CURSOR_ORIGIN_SIZE 3
