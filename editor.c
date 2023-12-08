@@ -4,18 +4,35 @@
 #include <sys/types.h>
 #include <stdlib.h>
 // sscanf() comes from <stdio.h>.
+// va_list, va_start(), and va_end() come from <stdarg.h>. vsnprintf() comes from <stdio.h>.
 #include <stdio.h>
 // ioctl(), TIOCGWINSZ, and struct winsize come from <sys/ioctl.h>.
 // #include <sys/ioctl.h>
 #include <string.h>
+// time() comes from <time.h>.
+#include <time.h>
+#include <stdarg.h>
 #include <assert.h>
+#include <ctype.h>
+#include <malloc.h>
+// strdup() comes from <string.h>
+//  It makes a copy of the given string, 
+//allocating the required memory and assuming you will free() that memory.
+#include <string.h>
 
 #include "editor.h"
 #include "error.h"
 #include "buffer.h"
 #include "terminal.h"
 
-
+char* mystrdup(const char* s){
+  size_t len = strlen(s)+1;
+  void* new  = malloc(len);
+  if(len == NULL){
+    return NULL;
+  }
+  return (char*) memcpy(new ,s ,len);
+}
 
 
 
@@ -87,15 +104,18 @@ void editorAppendRow(char *s, size_t len) {
 
 
 
-/**!SECTION
- * file i/o
- */
+
 void editorOpen(char *filename) {
+  free(E.filename);
+  // strdup() comes from <string.h>. It makes a copy of the given string, 
+  //allocating the required memory and assuming you will free() that memory.
+  E.filename = mystrdup(filename);
+
   FILE *fp = fopen(filename, "r");
   if (!fp) die("fopen");
+
   // store buffer
   char *line = NULL;
-
   size_t linecap = 0;
   ssize_t linelen;
 
@@ -143,6 +163,39 @@ void editorScroll() {
   }
 }
 
+void editorDrawStatusBar(struct abuf *ab) {
+  abAppend(ab, ES_TEXT_FORMAT_INVERTED_COLOR, ES_TEXT_FORMAT_INVERTED_COLOR_SIZE);
+
+  char status[80], rstatus[80];
+  int len = snprintf(status, sizeof(status), "%.20s - %d lines",
+                     E.filename ? E.filename : "[No Name]", E.numrows);
+  int rlen = snprintf(rstatus, sizeof(rstatus), "%d/%d",
+                      E.cy + 1, E.numrows); // current line / all lines
+  if (len > E.screencols) len = E.screencols;
+  abAppend(ab, status, len);
+
+  while (len < E.screencols) {
+    
+    if (E.screencols - len == rlen) { //right size render
+      abAppend(ab, rstatus, rlen);
+      break;
+    } else {
+      abAppend(ab, " ", 1);
+      len++;
+    }
+  }
+  abAppend(ab, ES_TEXT_FORMAT_RESET, ES_TEXT_FORMAT_RESET_SIZE);
+  abAppend(ab, "\r\n", 2);
+}
+
+void editorDrawMessageBar(struct abuf *ab) {
+  abAppend(ab, ES_CLEAR_LINE, ES_CLEAR_LINE_SIZE);
+  int msglen = strlen(E.statusmsg);
+  if (msglen > E.screencols) msglen = E.screencols;
+
+  if (msglen && time(NULL) - E.statusmsg_time < 5) // only show 5 seconds
+    abAppend(ab, E.statusmsg, msglen);
+}
 
 // refresh screen
 void editorRefreshScreen()
@@ -156,9 +209,10 @@ void editorRefreshScreen()
   abAppend(&ab,ES_POSITION_CURSOR_ORIGIN, ES_POSITION_CURSOR_ORIGIN_SIZE);
 
   editorDrawRows(&ab);
+  editorDrawStatusBar(&ab);
+  editorDrawMessageBar(&ab);
 
   char buf[32];
-
   snprintf(buf, sizeof(buf), ES_POSITION_CURSOR_FORMAT, (E.cy - E.rowoff) + 1, 
                                                          (E.rx - E.coloff) + 1);
 
@@ -171,7 +225,13 @@ void editorRefreshScreen()
   abFree(&ab);
 }
 
-
+void editorSetStatusMessage(const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(E.statusmsg, sizeof(E.statusmsg), fmt, ap);
+  va_end(ap);
+  E.statusmsg_time = time(NULL);
+}
 
 /**
  * @brief draw tides
@@ -229,7 +289,13 @@ void initEditor()
   E.row = NULL;
   E.rowoff = 0;
   E.coloff = 0;
+  E.filename = NULL;
+  E.statusmsg[0] = '\0';
+  E.statusmsg_time = 0;
+
+  editorSetStatusMessage("HELP: Ctrl-Q = quit");
+
   if (getWindowSize(&E.screenrows, &E.screencols) == -1)
     die("getWindowSize");
-  E.screenrows -= 1;
+  E.screenrows -= 2;
 }

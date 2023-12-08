@@ -38,4 +38,11 @@
 
 #define ES_CLEAR_LINE "\x1b[K"
 #define ES_CLEAR_LINE_SIZE 3
+
+// bold (1), underscore (4), blink (5), and inverted colors (7).
+#define ES_TEXT_FORMAT_INVERTED_COLOR "\x1b[7m"
+#define ES_TEXT_FORMAT_INVERTED_COLOR_SIZE 4
+
+#define ES_TEXT_FORMAT_RESET "\x1b[m"
+#define ES_TEXT_FORMAT_RESET_SIZE 3
 #endif

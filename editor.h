@@ -7,7 +7,7 @@
 #include <stdlib.h>
 // ioctl(), TIOCGWINSZ, and struct winsize come from <sys/ioctl.h>.
 #include <sys/ioctl.h>
-
+#include <time.h>
 
 #include "error.h"
 #include "escape.h"
@@ -34,6 +34,12 @@ struct editorConfig {
   erow *row;
   int rowoff;
   int coloff;
+
+  char *filename;
+
+  char statusmsg[80];
+  time_t statusmsg_time;
+
   struct termios orig_termios;
 };
 
