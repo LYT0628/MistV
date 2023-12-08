@@ -4,7 +4,7 @@
 
 #include <errno.h>
 // perror()
-
+#include <stdlib.h>
 
 #include "escape.h"
 

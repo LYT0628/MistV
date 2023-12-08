@@ -6,6 +6,8 @@
 #include <stdio.h>
 // ioctl(), TIOCGWINSZ, and struct winsize come from <sys/ioctl.h>.
 #include <sys/ioctl.h>
+#include <string.h>
+
 
 #include "error.h"
 #include "escape.h"
@@ -71,25 +73,33 @@ int getCursorPosition(int *rows, int *cols) {
  */
 void editorDrawRows(struct abuf *ab){
   int y;
+  
   for (y = 0; y < E.screenrows; y++) {
-    // draw welcome
-    if (y == E.screenrows / 3) { 
-      char welcome[80];
-      int welcomelen = snprintf(welcome, sizeof(welcome),
-        "Love editor -- version %s", LOVE_VERSION);
-      if (welcomelen > E.screencols) welcomelen = E.screencols;
-      // horizontal center
-      int padding = (E.screencols - welcomelen) / 2;
-      if (padding) {
-        abAppend(ab, "~", 1);
-        padding--;
-      }
-      while (padding--) abAppend(ab, " ", 1);
+    if (y >= E.numrows) {
+      // draw welcome
+      if (E.numrows == 0 && y == E.screenrows / 3) {
+        char welcome[80];
+        int welcomelen = snprintf(welcome, sizeof(welcome),
+          "Love editor -- version %s", LOVE_VERSION);
+        if (welcomelen > E.screencols) welcomelen = E.screencols;
+        // horizontal center
+        int padding = (E.screencols - welcomelen) / 2;
+        if (padding) {
+          abAppend(ab, "~", 1);
+          padding--;
+        }
+        while (padding--) abAppend(ab, " ", 1);
 
-      abAppend(ab, welcome, welcomelen);
+        abAppend(ab, welcome, welcomelen);
+      } else {
+        abAppend(ab, "~", 1);
+      }
     } else {
-      abAppend(ab, "~", 1);
+      int len = E.row[y].size;
+      if (len > E.screencols) len = E.screencols;
+      abAppend(ab, E.row[y].chars, len);
     }
+
 
     abAppend(ab, ES_CLEAR_LINE, ES_CLEAR_LINE_SIZE);
     if (y < E.screenrows - 1) {
