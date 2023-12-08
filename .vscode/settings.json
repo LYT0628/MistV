@@ -1,0 +1,12 @@
+{
+  "files.associations": {
+    "escape.h": "c",
+    "errno.h": "c",
+    "string.h": "c",
+    "error.h": "c",
+    "terminal.h": "c",
+    "ioctl.h": "c",
+    "stdlib.h": "c"
+  },
+  "C_Cpp.errorSquiggles": "disabled"
+}
