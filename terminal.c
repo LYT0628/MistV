@@ -67,46 +67,6 @@ int getCursorPosition(int *rows, int *cols) {
   return 0;
 }
 
-/**
- * @brief draw tides
- * 
- */
-void editorDrawRows(struct abuf *ab){
-  int y;
-  
-  for (y = 0; y < E.screenrows; y++) {
-    if (y >= E.numrows) {
-      // draw welcome
-      if (E.numrows == 0 && y == E.screenrows / 3) {
-        char welcome[80];
-        int welcomelen = snprintf(welcome, sizeof(welcome),
-          "Love editor -- version %s", LOVE_VERSION);
-        if (welcomelen > E.screencols) welcomelen = E.screencols;
-        // horizontal center
-        int padding = (E.screencols - welcomelen) / 2;
-        if (padding) {
-          abAppend(ab, "~", 1);
-          padding--;
-        }
-        while (padding--) abAppend(ab, " ", 1);
-
-        abAppend(ab, welcome, welcomelen);
-      } else {
-        abAppend(ab, "~", 1);
-      }
-    } else {
-      int len = E.row[y].size;
-      if (len > E.screencols) len = E.screencols;
-      abAppend(ab, E.row[y].chars, len);
-    }
-
-
-    abAppend(ab, ES_CLEAR_LINE, ES_CLEAR_LINE_SIZE);
-    if (y < E.screenrows - 1) {
-      abAppend(ab, "\r\n", 2);
-    }
-  }
-}
 
 /**
  * @brief disableRawMode
@@ -143,26 +103,5 @@ void enableRawMode()
     die("tcsetattr");
 }
 
-// refresh screen
-void editorRefreshScreen()
-{
-  struct abuf ab = ABUF_INIT;
 
-  abAppend(&ab, ES_HIDE_CURSOR, ES_HIDE_CURSOR_SIZE);
-  // abAppend(&ab, ES_CLEAR_ENTIRE_SCREEN, ES_CLEAR_ENTIRE_SCREEN_SIZE);
-  abAppend(&ab,ES_POSITION_CURSOR_ORIGIN, ES_POSITION_CURSOR_ORIGIN_SIZE);
-
-  editorDrawRows(&ab);
-
-  char buf[32];
-  snprintf(buf, sizeof(buf), ES_POSITION_CURSOR_FORMAT, E.cy + 1, E.cx + 1);
-  abAppend(&ab, buf, strlen(buf));
-  
-  abAppend(&ab, ES_POSITION_CURSOR_ORIGIN, ES_POSITION_CURSOR_ORIGIN_SIZE);
-  abAppend(&ab, ES_SHOW_CURSOR, ES_SHOW_CURSOR_SIZE);
-
-  write(STDOUT_FILENO, ab.b, ab.len);
-  
-  abFree(&ab);
-}
 

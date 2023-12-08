@@ -4,6 +4,13 @@
 
 #include "buffer.h"
 
+/**
+ * @brief 
+ * 
+ * @param ab 
+ * @param s 
+ * @param len 
+ */
 void abAppend(struct abuf *ab, const char *s, int len) {
   char *new = realloc(ab->b, ab->len + len);
   if (new == NULL) return;
@@ -11,6 +18,12 @@ void abAppend(struct abuf *ab, const char *s, int len) {
   ab->b = new;
   ab->len += len;
 }
+
+/**
+ * @brief 
+ * 
+ * @param ab 
+ */
 void abFree(struct abuf *ab) {
   free(ab->b);
 }

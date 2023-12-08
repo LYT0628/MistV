@@ -6,7 +6,7 @@
 #include <stdio.h>
 // EAGAIN comes from 
 #include <errno.h>
-
+#include <assert.h>
 
 #include "terminal.h"
 #include "error.h"
@@ -17,7 +17,7 @@
 extern struct editorConfig E;
 
 // read input
-char editorReadKey() {
+int editorReadKey() {
   int nread;
   char c;
   while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
@@ -26,6 +26,7 @@ char editorReadKey() {
 
   // arrow key tarts with '\x1b', '[', followed by an 'A', 'B', 'C', or 'D' 
   if (c == ES_PREFIX_0) {
+
     char seq[3];
     if (read(STDIN_FILENO, &seq[0], 1) != 1) return '\x1b';
     if (read(STDIN_FILENO, &seq[1], 1) != 1) return '\x1b';
@@ -45,8 +46,10 @@ char editorReadKey() {
             }
           }
         } else { 
+
           //arrow key
           switch (seq[1]) {
+
             case 'A': return ARROW_UP;
             case 'B': return ARROW_DOWN;
             case 'C': return ARROW_RIGHT;
@@ -69,15 +72,26 @@ char editorReadKey() {
 }
 
 void editorMoveCursor(int key) {
+
+
+  erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+
   switch (key) {
+    
     case ARROW_LEFT:
       if (E.cx != 0) {
         E.cx--;
+      } else if (E.cy > 0) {
+        E.cy--;
+        E.cx = E.row[E.cy].size;
       }
       break;
     case ARROW_RIGHT:
-      if (E.cx != E.screencols - 1) {
+      if (row && E.cx < row->size) {
         E.cx++;
+      }else if (row && E.cx == row->size) {
+        E.cy++;
+        E.cx = 0;
       }
       break;
     case ARROW_UP:
@@ -86,33 +100,51 @@ void editorMoveCursor(int key) {
       }
       break;
     case ARROW_DOWN:
-      if (E.cy != E.screenrows - 1) {
+      if (E.cy < E.numrows) {
         E.cy++;
       }
       break;
   }
+
+  row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+  int rowlen = row ? row->size : 0;
+  if (E.cx > rowlen) {
+    E.cx = rowlen;
+  }
+
 }
 
 // read process key input
+// editorMoveCursor() takes care of all the bounds-checking and cursor-fixing
 void editorProcessKeypress() {
   int c = editorReadKey();
+
   switch (c) {
     case CTRL_KEY('q'):
       write(STDOUT_FILENO, ES_CLEAR_ENTIRE_SCREEN, ES_CLEAR_ENTIRE_SCREEN_SIZE);
       write(STDOUT_FILENO, ES_POSITION_CURSOR_ORIGIN, ES_POSITION_CURSOR_ORIGIN_SIZE);
       exit(0);
       break;
-
+   
     case HOME_KEY:
+
       E.cx = 0;
-      break;
+      break; 
     case END_KEY:
-      E.cx = E.screencols - 1;
+      if (E.cy < E.numrows)
+        E.cx = E.row[E.cy].size;
       break;
 
     case PAGE_UP:
     case PAGE_DOWN:
       {
+        if (c == PAGE_UP) {
+          E.cy = E.rowoff;
+        } else if (c == PAGE_DOWN) {
+          E.cy = E.rowoff + E.screenrows - 1;
+          if (E.cy > E.numrows) E.cy = E.numrows;
+        }
+
         int times = E.screenrows;
         while (times--)
           editorMoveCursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
@@ -124,5 +156,6 @@ void editorProcessKeypress() {
     case ARROW_RIGHT:
       editorMoveCursor(c);
       break;
+
   }
 }

@@ -5,8 +5,6 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 void enableRawMode();
-void editorRefreshScreen();
-void initEditor();
 int getWindowSize(int *rows, int *cols);
 
 
