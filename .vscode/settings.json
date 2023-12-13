@@ -9,7 +9,8 @@
     "stdlib.h": "c",
     "buffer.h": "c",
     "malloc.h": "c",
-    "editor.h": "c"
+    "editor.h": "c",
+    "search.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

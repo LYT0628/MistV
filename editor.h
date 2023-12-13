@@ -54,5 +54,6 @@ void editorAppendRow(char *s, size_t len);
 void editorDrawRows(struct abuf *ab);
 void editorInsertChar(int c);
 void editorSetStatusMessage(const char *fmt, ...);
+char *editorPrompt(char *prompt, void (*callback)(char *, int));
 #endif
 
