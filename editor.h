@@ -15,6 +15,7 @@
 
 #define LOVE_VERSION "0.0.1"
 #define KILO_TAB_STOP 8
+#define KILO_QUIT_TIMES 3
 
 
 typedef struct erow {
@@ -34,6 +35,7 @@ struct editorConfig {
   erow *row;
   int rowoff;
   int coloff;
+  int dirty;
 
   char *filename;
 
@@ -50,5 +52,7 @@ void initEditor();
 void editorScroll();
 void editorAppendRow(char *s, size_t len);
 void editorDrawRows(struct abuf *ab);
+void editorInsertChar(int c);
+void editorSetStatusMessage(const char *fmt, ...);
 #endif
 

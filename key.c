@@ -117,15 +117,32 @@ void editorMoveCursor(int key) {
 // read process key input
 // editorMoveCursor() takes care of all the bounds-checking and cursor-fixing
 void editorProcessKeypress() {
+  static int quit_times = KILO_QUIT_TIMES;
+
+
   int c = editorReadKey();
 
   switch (c) {
+      case '\r':
+        editorInsertNewline();
+      break;
     case CTRL_KEY('q'):
+      if (E.dirty && quit_times > 0) {
+        editorSetStatusMessage("WARNING!!! File has unsaved changes. "
+          "Press Ctrl-Q %d more times to quit.", quit_times);
+        quit_times--;
+        return;
+      }
       write(STDOUT_FILENO, ES_CLEAR_ENTIRE_SCREEN, ES_CLEAR_ENTIRE_SCREEN_SIZE);
       write(STDOUT_FILENO, ES_POSITION_CURSOR_ORIGIN, ES_POSITION_CURSOR_ORIGIN_SIZE);
       exit(0);
       break;
    
+    case CTRL_KEY('s'):
+      editorSave();
+      break;
+
+
     case HOME_KEY:
 
       E.cx = 0;
@@ -133,6 +150,14 @@ void editorProcessKeypress() {
     case END_KEY:
       if (E.cy < E.numrows)
         E.cx = E.row[E.cy].size;
+      break;
+
+    
+    case BACKSPACE:
+    case CTRL_KEY('h'):
+    case DEL_KEY:
+      if (c == DEL_KEY) editorMoveCursor(ARROW_RIGHT);
+      editorDelChar();
       break;
 
     case PAGE_UP:
@@ -157,5 +182,15 @@ void editorProcessKeypress() {
       editorMoveCursor(c);
       break;
 
+    case CTRL_KEY('l'):
+    case '\x1b':
+      break;
+
+
+    default:
+      editorInsertChar(c);
+      break;
   }
+
+quit_times = KILO_QUIT_TIMES;
 }

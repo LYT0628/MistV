@@ -8,7 +8,8 @@
     "ioctl.h": "c",
     "stdlib.h": "c",
     "buffer.h": "c",
-    "malloc.h": "c"
+    "malloc.h": "c",
+    "editor.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }
