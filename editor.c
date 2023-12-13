@@ -99,6 +99,8 @@ void editorUpdateRow(erow *row) {
   }
   row->render[idx] = '\0';
   row->rsize = idx;
+
+  editorUpdateSyntax(row);
 }
 
 /**
@@ -119,6 +121,7 @@ void editorInsertRow(int at, char *s, size_t len) {
 
   E.row[at].rsize = 0;
   E.row[at].render = NULL;
+  E.row[at].hl = NULL;
 
   editorUpdateRow(&E.row[at]);
 
@@ -383,7 +386,18 @@ void editorDrawRows(struct abuf *ab){
       int len = E.row[filerow].rsize - E.coloff;
       if (len < 0) len = 0;
       if (len > E.screencols) len = E.screencols;
-      abAppend(ab, &E.row[filerow].render[E.coloff], len);
+      
+      char *c = &E.row[filerow].render[E.coloff];
+      int j;
+      for (j = 0; j < len; j++) {
+        if (isdigit(c[j])) {
+          abAppend(ab, ES_COLOR_RED, ES_COLOR_RED_SIZE);
+          abAppend(ab, &c[j], 1);
+          abAppend(ab, ES_COLOR_RESET, ES_COLOR_RESET_SIZE);
+        } else {
+          abAppend(ab, &c[j], 1);
+        }
+      }
     }
 
 
@@ -420,6 +434,7 @@ void initEditor()
 void editorFreeRow(erow *row) {
   free(row->render);
   free(row->chars);
+  free(row->hl);
 }
 void editorDelRow(int at) {
   if (at < 0 || at >= E.numrows) return;

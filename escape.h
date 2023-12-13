@@ -45,4 +45,12 @@
 
 #define ES_TEXT_FORMAT_RESET "\x1b[m"
 #define ES_TEXT_FORMAT_RESET_SIZE 3
+
+// color
+#define ES_COLOR_RESET_SIZE 5
+#define ES_COLOR_RESET "\x1b[39m"
+#define ES_COLOR_BLACK "\x1b[30m"
+#define ES_COLOR_RED "\x1b[31m"
+#define ES_COLOR_RED_SIZE 5
+#define ES_COLOR_WHITE "\x1b[37m"
 #endif
