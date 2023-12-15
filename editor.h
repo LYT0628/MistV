@@ -16,6 +16,17 @@
 #define LOVE_VERSION "0.0.1"
 #define KILO_TAB_STOP 8
 #define KILO_QUIT_TIMES 3
+#define HL_HIGHLIGHT_NUMBERS (1<<0)
+
+struct editorSyntax {
+  char *filetype;
+  char **filematch;
+  int flags;
+};
+
+
+
+
 
 
 typedef struct erow {
@@ -43,6 +54,7 @@ struct editorConfig {
   char statusmsg[80];
   time_t statusmsg_time;
 
+  struct editorSyntax *syntax;
   struct termios orig_termios;
 };
 

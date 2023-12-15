@@ -48,6 +48,7 @@
 
 // color
 #define ES_COLOR_RESET_SIZE 5
+#define ES_COLOR_FORMAT "\x1b[%dm"
 #define ES_COLOR_RESET "\x1b[39m"
 #define ES_COLOR_BLACK "\x1b[30m"
 #define ES_COLOR_RED "\x1b[31m"

@@ -29,6 +29,7 @@
 #include "error.h"
 #include "buffer.h"
 #include "terminal.h"
+#include "highlight.h"
 
 char* mystrdup(const char* s){
   size_t len = strlen(s)+1;
@@ -46,6 +47,17 @@ struct termios orig_termios;
 
 // global editor configuration
 struct editorConfig E;
+
+/*** filetypes ***/
+char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL };
+struct editorSyntax HLDB[] = {
+  {
+    "c",
+    C_HL_extensions,
+    HL_HIGHLIGHT_NUMBERS
+  },
+};
+#define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
 
 /**!SECTION
  * Row operation*
@@ -138,6 +150,8 @@ void editorOpen(char *filename) {
   //allocating the required memory and assuming you will free() that memory.
   E.filename = mystrdup(filename);
 
+
+  editorSelectSyntaxHighlight();
   FILE *fp = fopen(filename, "r");
   if (!fp) die("fopen");
 
@@ -191,6 +205,7 @@ void editorSave() {
       editorSetStatusMessage("Save aborted");
       return;
     }
+    editorSelectSyntaxHighlight();
   }
 
 
@@ -255,8 +270,9 @@ void editorDrawStatusBar(struct abuf *ab) {
     E.filename ? E.filename : "[No Name]", E.numrows,
     E.dirty ? "(modified)" : "");
 
-  int rlen = snprintf(rstatus, sizeof(rstatus), "%d/%d",
-                      E.cy + 1, E.numrows); // current line / all lines
+  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d/%d",
+    E.syntax ? E.syntax->filetype : "no ft", E.cy + 1, E.numrows); // current line / all lines， not filetype
+ 
   if (len > E.screencols) len = E.screencols;
   abAppend(ab, status, len);
 
@@ -388,16 +404,28 @@ void editorDrawRows(struct abuf *ab){
       if (len > E.screencols) len = E.screencols;
       
       char *c = &E.row[filerow].render[E.coloff];
+      unsigned char *hl = &E.row[filerow].hl[E.coloff];
+      int current_color = -1;
       int j;
       for (j = 0; j < len; j++) {
-        if (isdigit(c[j])) {
-          abAppend(ab, ES_COLOR_RED, ES_COLOR_RED_SIZE);
+        if (hl[j] == HL_NORMAL) {
+          if (current_color != -1) {
+            abAppend(ab, ES_COLOR_RESET, ES_COLOR_RESET_SIZE);
+            current_color = -1;
+          }
           abAppend(ab, &c[j], 1);
-          abAppend(ab, ES_COLOR_RESET, ES_COLOR_RESET_SIZE);
-        } else {
+        }else {
+          int color = editorSyntaxToColor(hl[j]);
+          if (color != current_color) { // keep coloring until color changed
+            current_color = color;
+            char buf[16];
+            int clen = snprintf(buf, sizeof(buf), ES_COLOR_FORMAT, color);
+            abAppend(ab, buf, clen);
+          }
           abAppend(ab, &c[j], 1);
         }
       }
+      abAppend(ab, ES_COLOR_RESET, ES_COLOR_RESET_SIZE);
     }
 
 
@@ -423,6 +451,7 @@ void initEditor()
   E.filename = NULL;
   E.statusmsg[0] = '\0';
   E.statusmsg_time = 0;
+  E.syntax = NULL;
 
   editorSetStatusMessage("HELP: Ctrl-Q = quit");
 
@@ -523,3 +552,28 @@ void editorDelChar() {
   }
 }
 
+
+void editorSelectSyntaxHighlight() {
+  E.syntax = NULL;
+  if (E.filename == NULL) return;
+  char *ext = strrchr(E.filename, '.');
+  for (unsigned int j = 0; j < HLDB_ENTRIES; j++) {
+    struct editorSyntax *s = &HLDB[j];
+    unsigned int i = 0;
+    while (s->filematch[i]) {
+      int is_ext = (s->filematch[i][0] == '.');
+      if ((is_ext && ext && !strcmp(ext, s->filematch[i])) ||
+          (!is_ext && strstr(E.filename, s->filematch[i]))) {
+        E.syntax = s;
+
+        int filerow;
+        for (filerow = 0; filerow < E.numrows; filerow++) {
+          editorUpdateSyntax(&E.row[filerow]);
+        }
+
+        return;
+      }
+      i++;
+    }
+  }
+}
