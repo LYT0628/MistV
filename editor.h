@@ -17,10 +17,15 @@
 #define KILO_TAB_STOP 8
 #define KILO_QUIT_TIMES 3
 #define HL_HIGHLIGHT_NUMBERS (1<<0)
+#define HL_HIGHLIGHT_STRINGS (1<<1)
 
 struct editorSyntax {
   char *filetype;
   char **filematch;
+  char *singleline_comment_start;
+  char *multiline_comment_start;
+  char *multiline_comment_end;
+  char **keywords;
   int flags;
 };
 
@@ -30,11 +35,13 @@ struct editorSyntax {
 
 
 typedef struct erow {
+  int idx;
   int size;
   int rsize;
   char *chars;
   char *render;
   unsigned char *hl;
+  int hl_open_comment;
 } erow;
 
 struct editorConfig {

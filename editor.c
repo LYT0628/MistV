@@ -50,11 +50,19 @@ struct editorConfig E;
 
 /*** filetypes ***/
 char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL };
+char *C_HL_keywords[] = {
+  "switch", "if", "while", "for", "break", "continue", "return", "else",
+  "struct", "union", "typedef", "static", "enum", "class", "case",
+  "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
+  "void|", NULL
+};
 struct editorSyntax HLDB[] = {
   {
     "c",
     C_HL_extensions,
-    HL_HIGHLIGHT_NUMBERS
+    "//", "/*", "*/",// comment
+    C_HL_keywords, // keywords
+    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
 };
 #define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
@@ -125,7 +133,10 @@ void editorInsertRow(int at, char *s, size_t len) {
   if (at < 0 || at > E.numrows) return;
   E.row = realloc(E.row, sizeof(erow) * (E.numrows + 1));
   memmove(&E.row[at + 1], &E.row[at], sizeof(erow) * (E.numrows - at));
-
+  
+  // when inserting a new row, we need to update row index after it.
+  for (int j = at + 1; j <= E.numrows; j++) E.row[j].idx++;
+  E.row[at].idx = at;
   E.row[at].size = len; 
   E.row[at].chars = malloc(len + 1);
   memcpy(E.row[at].chars, s, len);// dest, src, len
@@ -134,7 +145,7 @@ void editorInsertRow(int at, char *s, size_t len) {
   E.row[at].rsize = 0;
   E.row[at].render = NULL;
   E.row[at].hl = NULL;
-
+  E.row[at].hl_open_comment = 0; // in open multi comment
   editorUpdateRow(&E.row[at]);
 
   E.numrows++;
@@ -408,7 +419,20 @@ void editorDrawRows(struct abuf *ab){
       int current_color = -1;
       int j;
       for (j = 0; j < len; j++) {
-        if (hl[j] == HL_NORMAL) {
+        // skip escape character
+        if (iscntrl(c[j])) {
+          char sym = (c[j] <= 26) ? '@' + c[j] : '?';
+          abAppend(ab, "\x1b[7m", 4);
+          abAppend(ab, &sym, 1);
+          abAppend(ab, "\x1b[m", 3);
+          // restore format setting
+          if (current_color != -1) {
+            char buf[16];
+            int clen = snprintf(buf, sizeof(buf), "\x1b[%dm", current_color);
+            abAppend(ab, buf, clen);
+          }
+
+        } else if (hl[j] == HL_NORMAL) {
           if (current_color != -1) {
             abAppend(ab, ES_COLOR_RESET, ES_COLOR_RESET_SIZE);
             current_color = -1;
@@ -469,6 +493,9 @@ void editorDelRow(int at) {
   if (at < 0 || at >= E.numrows) return;
   editorFreeRow(&E.row[at]);
   memmove(&E.row[at], &E.row[at + 1], sizeof(erow) * (E.numrows - at - 1));
+  
+  // when delete row, we need to update row index after it.
+  for (int j = at; j < E.numrows - 1; j++) E.row[j].idx--;
   E.numrows--;
   E.dirty++;
 }
