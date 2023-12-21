@@ -10,7 +10,9 @@
     "buffer.h": "c",
     "malloc.h": "c",
     "editor.h": "c",
-    "search.h": "c"
+    "search.h": "c",
+    "termios.h": "c",
+    "unistd.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

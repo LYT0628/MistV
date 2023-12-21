@@ -186,6 +186,7 @@ void editorOpen(char *filename) {
   E.dirty = 0;
 }
 
+   
 /**
  * @brief 
  * 

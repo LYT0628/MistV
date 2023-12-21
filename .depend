@@ -1,0 +1,9 @@
+./buffer.o: buffer.c buffer.h
+editor.o: editor.c key.h editor.h error.h escape.h buffer.h terminal.h \
+ highlight.h
+error.o: error.c escape.h
+highlight.o: highlight.c editor.h error.h escape.h buffer.h highlight.h
+key.o: key.c terminal.h error.h escape.h editor.h buffer.h key.h search.h
+mistv.o: mistv.c key.h terminal.h editor.h error.h escape.h buffer.h
+search.o: search.c editor.h error.h escape.h buffer.h key.h highlight.h
+terminal.o: terminal.c error.h escape.h editor.h buffer.h key.h
